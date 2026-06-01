@@ -29,22 +29,22 @@ export function GlobalStyles() {
           background-image:
             radial-gradient(
               ellipse 60% 50% at 20% 0%,
-              rgba(34, 211, 238, 0.18),
+              rgba(34, 211, 238, 0.11),
               transparent 60%
             ),
             radial-gradient(
               ellipse 50% 60% at 100% 30%,
-              rgba(167, 139, 250, 0.15),
+              rgba(167, 139, 250, 0.09),
               transparent 60%
             ),
             radial-gradient(
               ellipse 80% 50% at 50% 100%,
-              rgba(110, 168, 254, 0.12),
+              rgba(110, 168, 254, 0.07),
               transparent 60%
             ),
             radial-gradient(
               ellipse 40% 30% at 0% 70%,
-              rgba(52, 211, 153, 0.08),
+              rgba(52, 211, 153, 0.05),
               transparent 60%
             );
           background-attachment: fixed;

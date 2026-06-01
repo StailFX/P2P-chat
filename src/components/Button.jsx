@@ -36,17 +36,17 @@ const StyledButton = styled.button(
           color: '#08111e',
           borderColor: 'rgba(255, 255, 255, 0.18)',
           boxShadow: `
-            inset 0 1px 0 rgba(255, 255, 255, 0.45),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4),
             inset 0 -1px 0 rgba(0, 0, 0, 0.2),
-            0 0 24px rgba(110, 168, 254, 0.35),
-            0 12px 28px rgba(0, 0, 0, 0.45)
+            0 0 16px rgba(110, 168, 254, 0.2),
+            0 10px 24px rgba(0, 0, 0, 0.4)
           `,
           '&:not(:disabled):hover': {
             boxShadow: `
-              inset 0 1px 0 rgba(255, 255, 255, 0.55),
+              inset 0 1px 0 rgba(255, 255, 255, 0.5),
               inset 0 -1px 0 rgba(0, 0, 0, 0.2),
-              0 0 36px rgba(110, 168, 254, 0.55),
-              0 16px 32px rgba(0, 0, 0, 0.5)
+              0 0 22px rgba(110, 168, 254, 0.32),
+              0 14px 28px rgba(0, 0, 0, 0.45)
             `,
           },
         };

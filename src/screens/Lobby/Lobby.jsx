@@ -100,7 +100,7 @@ const Logo = styled.h1(({ theme }) => ({
   background: `linear-gradient(180deg, #ffffff 0%, ${theme.colors.cyan} 70%, ${theme.colors.accent} 100%)`,
   WebkitBackgroundClip: 'text',
   WebkitTextFillColor: 'transparent',
-  filter: 'drop-shadow(0 0 24px rgba(34, 211, 238, 0.45))',
+  filter: 'drop-shadow(0 0 14px rgba(34, 211, 238, 0.22))',
 }));
 
 const Tagline = styled.p(({ theme }) => ({
