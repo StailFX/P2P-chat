@@ -11,8 +11,9 @@ const Grid = styled.div(({ theme }) => ({
 }));
 
 const Item = styled.button(({ theme, active }) => ({
-  background: active ? theme.colors.accentSoft : theme.colors.bg2,
-  border: `1px solid ${active ? theme.colors.accent : theme.colors.border}`,
+  position: 'relative',
+  background: active ? theme.colors.cyanSoft : theme.colors.glassBg,
+  border: `1px solid ${active ? theme.colors.cyan : theme.colors.glassBorder}`,
   borderRadius: theme.radii.md,
   aspectRatio: '1 / 1',
   display: 'flex',
@@ -20,15 +21,25 @@ const Item = styled.button(({ theme, active }) => ({
   justifyContent: 'center',
   cursor: 'pointer',
   padding: 0,
-  transition: 'border-color 0.15s, background 0.15s, transform 0.05s',
+  backdropFilter: theme.blurs.glassLight,
+  WebkitBackdropFilter: theme.blurs.glassLight,
+  transition:
+    'border-color 0.2s, background 0.2s, transform 0.05s, box-shadow 0.2s',
+  boxShadow: active
+    ? `inset 0 1px 0 ${theme.colors.glassHighlight}, 0 0 20px ${theme.colors.cyanSoft}`
+    : `inset 0 1px 0 ${theme.colors.glassHighlight}`,
   '&:hover': {
-    borderColor: active ? theme.colors.accent : theme.colors.borderStrong,
-    background: active ? theme.colors.accentSoft : theme.colors.bg3,
+    borderColor: active ? theme.colors.cyan : theme.colors.borderStrong,
+    background: active ? theme.colors.cyanSoft : theme.colors.bg2,
   },
   '&:active': { transform: 'scale(0.96)' },
 }));
 
-const Emoji = styled.span({ fontSize: 22, lineHeight: 1 });
+const Emoji = styled.span({
+  fontSize: 22,
+  lineHeight: 1,
+  filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))',
+});
 
 export function AvatarPicker({ value, onChange }) {
   return (

@@ -1,13 +1,14 @@
 import styled from '@emotion/styled';
 
 const sizes = {
-  sm: { padding: '6px 12px', fontSize: '13px' },
-  md: { padding: '10px 18px', fontSize: '14px' },
-  lg: { padding: '14px 22px', fontSize: '15px' },
+  sm: { padding: '8px 14px', fontSize: '13px', minHeight: '34px' },
+  md: { padding: '11px 18px', fontSize: '14px', minHeight: '42px' },
+  lg: { padding: '14px 22px', fontSize: '15px', minHeight: '50px' },
 };
 
 const StyledButton = styled.button(
   ({ theme }) => ({
+    position: 'relative',
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -15,10 +16,14 @@ const StyledButton = styled.button(
     border: '1px solid transparent',
     borderRadius: theme.radii.md,
     cursor: 'pointer',
-    fontWeight: 500,
-    transition: 'background 0.15s, border-color 0.15s, color 0.15s, transform 0.05s',
+    fontWeight: 600,
+    letterSpacing: '0.01em',
+    transition:
+      'background 0.2s, border-color 0.2s, color 0.2s, transform 0.05s, box-shadow 0.2s',
     userSelect: 'none',
-    '&:disabled': { opacity: 0.5, cursor: 'not-allowed' },
+    backdropFilter: theme.blurs.glassLight,
+    WebkitBackdropFilter: theme.blurs.glassLight,
+    '&:disabled': { opacity: 0.45, cursor: 'not-allowed' },
     '&:not(:disabled):active': { transform: 'translateY(1px)' },
   }),
   ({ size = 'md' }) => sizes[size],
@@ -27,26 +32,51 @@ const StyledButton = styled.button(
     switch (variant) {
       case 'primary':
         return {
-          background: theme.colors.accent,
-          color: theme.colors.bg0,
-          '&:not(:disabled):hover': { background: theme.colors.accentStrong },
+          background: `linear-gradient(180deg, ${theme.colors.cyan} 0%, ${theme.colors.accent} 55%, ${theme.colors.accentStrong} 100%)`,
+          color: '#08111e',
+          borderColor: 'rgba(255, 255, 255, 0.18)',
+          boxShadow: `
+            inset 0 1px 0 rgba(255, 255, 255, 0.45),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+            0 0 24px rgba(110, 168, 254, 0.35),
+            0 12px 28px rgba(0, 0, 0, 0.45)
+          `,
+          '&:not(:disabled):hover': {
+            boxShadow: `
+              inset 0 1px 0 rgba(255, 255, 255, 0.55),
+              inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+              0 0 36px rgba(110, 168, 254, 0.55),
+              0 16px 32px rgba(0, 0, 0, 0.5)
+            `,
+          },
         };
       case 'secondary':
         return {
-          background: theme.colors.bg2,
+          background: theme.colors.glassBg,
           color: theme.colors.text,
-          borderColor: theme.colors.border,
+          borderColor: theme.colors.glassBorder,
+          boxShadow: `
+            inset 0 1px 0 ${theme.colors.glassHighlight},
+            0 4px 16px rgba(0, 0, 0, 0.3)
+          `,
           '&:not(:disabled):hover': {
-            background: theme.colors.bg3,
+            background: theme.colors.glassBgStrong,
             borderColor: theme.colors.borderStrong,
+            boxShadow: `
+              inset 0 1px 0 ${theme.colors.glassHighlight},
+              0 0 24px rgba(34, 211, 238, 0.18),
+              0 4px 16px rgba(0, 0, 0, 0.4)
+            `,
           },
         };
       case 'ghost':
         return {
           background: 'transparent',
           color: theme.colors.textMuted,
+          backdropFilter: 'none',
+          WebkitBackdropFilter: 'none',
           '&:not(:disabled):hover': {
-            background: theme.colors.bg2,
+            background: theme.colors.glassBg,
             color: theme.colors.text,
           },
         };
@@ -54,7 +84,7 @@ const StyledButton = styled.button(
         return {
           background: 'transparent',
           color: theme.colors.danger,
-          borderColor: theme.colors.border,
+          borderColor: theme.colors.glassBorder,
           '&:not(:disabled):hover': { background: theme.colors.dangerSoft },
         };
       default:

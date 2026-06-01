@@ -11,15 +11,20 @@ const Dot = styled.button(({ theme, active, color }) => ({
   width: 28,
   height: 28,
   borderRadius: '50%',
-  border: `2px solid ${active ? theme.colors.text : 'transparent'}`,
-  background: color,
+  border: `2px solid ${active ? '#fff' : 'transparent'}`,
+  background: `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.5), transparent 50%), ${color}`,
   cursor: 'pointer',
   padding: 0,
-  transition: 'transform 0.05s, border-color 0.15s, box-shadow 0.15s',
+  transition: 'transform 0.15s, border-color 0.2s, box-shadow 0.2s',
   boxShadow: active
-    ? `0 0 0 3px ${theme.colors.bg1}, 0 0 0 4px ${theme.colors.accent}`
-    : 'inset 0 0 0 1px rgba(0, 0, 0, 0.3)',
-  '&:hover': { transform: 'scale(1.08)' },
+    ? `0 0 0 3px ${theme.colors.bg0}, 0 0 16px ${color}, inset 0 1px 0 rgba(255,255,255,0.3)`
+    : `inset 0 0 0 1px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.25)`,
+  '&:hover': {
+    transform: 'scale(1.12)',
+    boxShadow: active
+      ? `0 0 0 3px ${theme.colors.bg0}, 0 0 20px ${color}, inset 0 1px 0 rgba(255,255,255,0.3)`
+      : `0 0 12px ${color}, inset 0 1px 0 rgba(255,255,255,0.3)`,
+  },
 }));
 
 export function ColorPicker({ value, onChange }) {
