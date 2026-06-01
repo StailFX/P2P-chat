@@ -46,43 +46,108 @@ const formatLastVisited = (ts) => {
   return `${d} дн назад`;
 };
 
-const Page = styled.div(({ theme }) => ({
+const Page = styled.div({
+  position: 'relative',
+  zIndex: 1,
   minHeight: '100%',
   display: 'flex',
   alignItems: 'flex-start',
   justifyContent: 'center',
-  padding: '48px 16px',
-  background: `radial-gradient(ellipse at top, rgba(110, 168, 254, 0.08), transparent 60%), ${theme.colors.bg0}`,
-  [`@media (max-width: ${theme.breakpoints.mobile})`]: { padding: '24px 12px' },
-}));
+  padding: '56px 20px 64px',
+});
 
 const Card = styled.section(({ theme }) => ({
+  position: 'relative',
   width: '100%',
-  maxWidth: 520,
-  background: theme.colors.bg1,
-  border: `1px solid ${theme.colors.border}`,
-  borderRadius: theme.radii.lg,
-  padding: '28px 28px 32px',
-  boxShadow: theme.shadows.md,
-  [`@media (max-width: ${theme.breakpoints.mobile})`]: { padding: 20 },
+  maxWidth: 540,
+  background: theme.colors.glassBg,
+  backdropFilter: theme.blurs.glass,
+  WebkitBackdropFilter: theme.blurs.glass,
+  border: `1px solid ${theme.colors.glassBorder}`,
+  borderRadius: theme.radii.xl,
+  padding: '36px 36px 40px',
+  boxShadow: `
+    inset 0 1px 0 ${theme.colors.glassHighlight},
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    0 24px 64px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.02)
+  `,
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    inset: 0,
+    borderRadius: 'inherit',
+    pointerEvents: 'none',
+    background:
+      'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 30%)',
+  },
+  [`@media (max-width: ${theme.breakpoints.mobile})`]: {
+    padding: '24px 20px 28px',
+    borderRadius: theme.radii.lg,
+  },
 }));
 
 const Header = styled.header({
   textAlign: 'center',
-  marginBottom: 24,
+  marginBottom: 28,
 });
 
-const Title = styled.h1({
-  fontSize: 26,
-  margin: '0 0 6px',
-  letterSpacing: '-0.01em',
-});
+const Logo = styled.h1(({ theme }) => ({
+  fontSize: 38,
+  margin: '0 0 10px',
+  letterSpacing: '-0.03em',
+  fontWeight: 700,
+  background: `linear-gradient(180deg, #ffffff 0%, ${theme.colors.cyan} 70%, ${theme.colors.accent} 100%)`,
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  filter: 'drop-shadow(0 0 24px rgba(34, 211, 238, 0.45))',
+}));
 
-const Subtitle = styled.p(({ theme }) => ({
+const Tagline = styled.p(({ theme }) => ({
   margin: 0,
   color: theme.colors.textMuted,
   fontSize: 13,
+  letterSpacing: '0.02em',
 }));
+
+const BadgeRow = styled.div({
+  display: 'flex',
+  gap: 8,
+  justifyContent: 'center',
+  flexWrap: 'wrap',
+  marginTop: 16,
+});
+
+const Badge = styled.span(({ theme, tone = 'success' }) => {
+  const tones = {
+    success: { color: theme.colors.emerald, soft: theme.colors.emeraldSoft },
+    cyan: { color: theme.colors.cyan, soft: theme.colors.cyanSoft },
+    violet: { color: theme.colors.violet, soft: theme.colors.violetSoft },
+  };
+  const t = tones[tone];
+  return {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+    padding: '5px 10px',
+    borderRadius: 999,
+    fontSize: 11,
+    fontWeight: 500,
+    letterSpacing: '0.04em',
+    textTransform: 'uppercase',
+    color: t.color,
+    background: t.soft,
+    border: `1px solid ${t.soft}`,
+    '&::before': {
+      content: '""',
+      width: 6,
+      height: 6,
+      borderRadius: '50%',
+      background: t.color,
+      boxShadow: `0 0 8px ${t.color}`,
+    },
+  };
+});
 
 const Section = styled.section({
   display: 'flex',
@@ -93,68 +158,78 @@ const Section = styled.section({
 });
 
 const SectionTitle = styled.h2(({ theme }) => ({
-  fontSize: 13,
+  fontSize: 11,
   textTransform: 'uppercase',
-  letterSpacing: '0.06em',
+  letterSpacing: '0.1em',
   color: theme.colors.textMuted,
   margin: 0,
+  fontWeight: 700,
 }));
 
 const Row = styled.div({
   display: 'flex',
   flexDirection: 'column',
-  gap: 8,
+  gap: 10,
 });
 
 const RowLabel = styled.span(({ theme }) => ({
-  fontSize: 12,
+  fontSize: 11,
   color: theme.colors.textMuted,
   textTransform: 'uppercase',
-  letterSpacing: '0.05em',
+  letterSpacing: '0.08em',
+  fontWeight: 600,
 }));
 
 const ProfilePreview = styled.div(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
-  gap: 14,
-  padding: '14px 16px',
-  background: theme.colors.bg2,
-  border: `1px solid ${theme.colors.border}`,
-  borderRadius: theme.radii.md,
+  gap: 16,
+  padding: '14px 18px',
+  background: theme.colors.glassBg,
+  border: `1px solid ${theme.colors.glassBorder}`,
+  borderRadius: theme.radii.lg,
+  boxShadow: `inset 0 1px 0 ${theme.colors.glassHighlight}`,
 }));
 
-const ProfileAvatar = styled.div(({ theme }) => ({
-  width: 44,
-  height: 44,
+const ProfileAvatar = styled.div(({ theme, glowColor }) => ({
+  width: 48,
+  height: 48,
   borderRadius: '50%',
-  background: theme.colors.bg3,
+  background: `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.15), transparent 60%), ${theme.colors.bg2}`,
+  border: `1px solid ${theme.colors.glassBorder}`,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  fontSize: 24,
+  fontSize: 26,
+  boxShadow: `inset 0 1px 0 rgba(255,255,255,0.1), 0 0 24px ${glowColor || 'transparent'}`,
 }));
 
 const ProfileName = styled.div(({ color }) => ({
-  fontSize: 16,
+  fontSize: 17,
   fontWeight: 600,
   color,
+  letterSpacing: '0.01em',
+  textShadow: `0 0 16px ${color}40`,
 }));
 
 const Divider = styled.div(({ theme }) => ({
   height: 1,
-  background: theme.colors.border,
-  margin: '6px 0 22px',
+  background: `linear-gradient(90deg, transparent, ${theme.colors.glassBorder}, transparent)`,
+  margin: '8px 0 20px',
 }));
 
 const JoinForm = styled.form(({ theme }) => ({
-  display: 'grid',
-  gridTemplateColumns: '1fr auto',
+  display: 'flex',
   gap: 10,
-  alignItems: 'end',
+  alignItems: 'stretch',
   [`@media (max-width: ${theme.breakpoints.mobile})`]: {
-    gridTemplateColumns: '1fr',
+    flexDirection: 'column',
   },
 }));
+
+const JoinButton = styled(Button)({
+  flexShrink: 0,
+});
 
 const RecentList = styled.ul({
   listStyle: 'none',
@@ -162,23 +237,31 @@ const RecentList = styled.ul({
   padding: 0,
   display: 'flex',
   flexDirection: 'column',
-  gap: 6,
+  gap: 8,
 });
 
 const RecentItem = styled.li(({ theme }) => ({
-  display: 'flex',
-  gap: 4,
-  background: theme.colors.bg2,
-  border: `1px solid ${theme.colors.border}`,
+  position: 'relative',
+  background: theme.colors.glassBg,
+  border: `1px solid ${theme.colors.glassBorder}`,
   borderRadius: theme.radii.md,
-  overflow: 'hidden',
+  transition: 'border-color 0.2s, background 0.2s, box-shadow 0.2s',
+  boxShadow: `inset 0 1px 0 ${theme.colors.glassHighlight}`,
+  '&:hover': {
+    borderColor: theme.colors.borderStrong,
+    background: theme.colors.glassBgStrong,
+    boxShadow: `
+      inset 0 1px 0 ${theme.colors.glassHighlight},
+      0 0 20px ${theme.colors.cyanSoft}
+    `,
+  },
 }));
 
 const RecentMain = styled.button(({ theme }) => ({
-  flex: 1,
+  width: '100%',
   background: 'transparent',
   border: 'none',
-  padding: '10px 14px',
+  padding: '12px 48px 12px 16px',
   textAlign: 'left',
   cursor: 'pointer',
   color: theme.colors.text,
@@ -186,13 +269,15 @@ const RecentMain = styled.button(({ theme }) => ({
   justifyContent: 'space-between',
   alignItems: 'center',
   gap: 12,
-  '&:not(:disabled):hover': { background: theme.colors.bg3 },
+  borderRadius: 'inherit',
   '&:disabled': { opacity: 0.5, cursor: 'not-allowed' },
 }));
 
 const RecentId = styled.span(({ theme }) => ({
   fontFamily: theme.fonts.mono,
   fontSize: 14,
+  color: theme.colors.cyan,
+  letterSpacing: '0.04em',
 }));
 
 const RecentTime = styled.span(({ theme }) => ({
@@ -201,13 +286,23 @@ const RecentTime = styled.span(({ theme }) => ({
 }));
 
 const RecentRemove = styled.button(({ theme }) => ({
+  position: 'absolute',
+  right: 8,
+  top: '50%',
+  transform: 'translateY(-50%)',
+  width: 28,
+  height: 28,
+  borderRadius: '50%',
   background: 'transparent',
   border: 'none',
   color: theme.colors.textFaint,
   cursor: 'pointer',
-  padding: '0 14px',
-  fontSize: 20,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: 16,
   lineHeight: 1,
+  transition: 'background 0.15s, color 0.15s',
   '&:hover': {
     color: theme.colors.danger,
     background: theme.colors.dangerSoft,
@@ -277,16 +372,21 @@ export function Lobby() {
     <Page>
       <Card aria-labelledby="lobby-title">
         <Header>
-          <Title id="lobby-title">P2P Chat</Title>
-          <Subtitle>
-            Чат и обмен файлами без сервера. Создай комнату или зайди по ID.
-          </Subtitle>
+          <Logo id="lobby-title">P2P Chat</Logo>
+          <Tagline>Прямое соединение. Без посредников.</Tagline>
+          <BadgeRow>
+            <Badge tone="success">WebRTC ready</Badge>
+            <Badge tone="cyan">Signaling online</Badge>
+            <Badge tone="violet">P2P</Badge>
+          </BadgeRow>
         </Header>
 
         <Section aria-labelledby="profile-title">
           <SectionTitle id="profile-title">Профиль</SectionTitle>
           <ProfilePreview>
-            <ProfileAvatar aria-hidden="true">{avatar.emoji}</ProfileAvatar>
+            <ProfileAvatar glowColor={`${color.value}55`} aria-hidden="true">
+              {avatar.emoji}
+            </ProfileAvatar>
             <ProfileName color={color.value}>
               {profile.nickname || 'Без имени'}
             </ProfileName>
@@ -321,8 +421,7 @@ export function Lobby() {
 
         <Divider />
 
-        <Section aria-labelledby="create-title">
-          <SectionTitle id="create-title">Создать комнату</SectionTitle>
+        <Section>
           <Button
             variant="primary"
             size="lg"
@@ -339,6 +438,7 @@ export function Lobby() {
           <JoinForm onSubmit={handleJoin} noValidate>
             <Input
               id="roomId"
+              size="lg"
               value={roomIdInput}
               onChange={(v) => {
                 setRoomIdInput(v);
@@ -348,14 +448,14 @@ export function Lobby() {
               maxLength={12}
               error={roomIdError}
             />
-            <Button
+            <JoinButton
               type="submit"
               variant="secondary"
               size="lg"
               disabled={!profile.isValid}
             >
               Войти
-            </Button>
+            </JoinButton>
           </JoinForm>
         </Section>
 
