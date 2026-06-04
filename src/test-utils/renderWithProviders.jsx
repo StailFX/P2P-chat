@@ -5,6 +5,7 @@ import { ThemeProvider } from '@emotion/react';
 import { MemoryRouter } from 'react-router-dom';
 import profileReducer from '../features/profile/profileSlice';
 import roomReducer from '../features/room/roomSlice';
+import filesReducer from '../features/filesSlice';
 import { theme } from '../styles/theme';
 
 export const makeStore = (preloadedState) =>
@@ -12,6 +13,7 @@ export const makeStore = (preloadedState) =>
     reducer: {
       profile: profileReducer,
       room: roomReducer,
+      files: filesReducer,
     },
     preloadedState,
   });
