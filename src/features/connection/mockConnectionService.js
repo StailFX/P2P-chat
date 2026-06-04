@@ -1,79 +1,85 @@
 export function createMockConnection({
-    roomId,
-    peerId,
-    profile,
-    handlers = {},
+  roomId,
+  peerId,
+  profile,
+  handlers = {},
 }) {
-    const channel = new BroadcastChannel(`p2p-room-${roomId}`);
+  const channel = new BroadcastChannel(`p2p-room-${roomId}`);
 
-    channel.onmessage = (event) => {
-        const data = event.data;
+  const safeProfile = {
+    nickname: profile?.nickname || 'Пользователь',
+    avatar: profile?.avatar || profile?.avatarId || '🦊',
+    nicknameColor: profile?.nicknameColor || '#60a5fa',
+  };
 
-        if (!data) return;
+  const createUserPayload = () => ({
+    peerId,
+    roomId,
+    profile: safeProfile,
+    createdAt: new Date().toISOString(),
+  });
 
-        if (data.senderPeerId === peerId) return;
-
-        switch (data.type) {
-            case 'USER_JOINED':
-                handlers.onUserJoined?.(data);
-                break;
-            case 'USER_LEFT':
-                handlers.onUserLeft?.(data);
-                break;
-            case 'CHAT_MESSAGE':
-                handlers.onMessage?.(data);
-                break;
-            case 'FILE_EVENT':
-                handlers.onFileEvent?.(data);
-                break;
-
-            default:
-                break;
-        }
-    };
-
+  const sendEvent = (type, payload) => {
     channel.postMessage({
-        type: 'USER_JOINED',
-        senderPeerId: peerId,
-        payload: {
-            peerId,
-            roomId,
-            profile,
-            createdAt: new Date().toISOString(),
-        },
+      type,
+      senderPeerId: peerId,
+      payload,
     });
+  };
 
-    return {
-        sendMessage: (message) => {
-            channel.postMessage({
-                type: 'CHAT_MESSAGE',
-                senderPeerId: peerId,
-                payload: message,
-            });
-        },
+  channel.onmessage = (event) => {
+    const data = event.data;
 
-        sendFileEvent: (payload) => {
-            channel.postMessage({
-                type: 'FILE_EVENT',
-                senderPeerId: peerId,
-                payload,
-            });
-        },
-
-        disconnect: () => {
-            channel.postMessage({
-                type: 'USER_LEFT',
-                senderPeerId: peerId,
-                payload: {
-                    peerId,
-                    roomId,
-                    profile,
-                    createdAt: new Date().toISOString(),
-                }
-            });
-
-            channel.close();
-        },
-
+    if (!data) {
+      return;
     }
+
+    if (data.senderPeerId === peerId) {
+      return;
+    }
+
+    switch (data.type) {
+      case 'USER_JOINED':
+        handlers.onUserJoined?.(data.payload);
+
+        sendEvent('USER_ACK', createUserPayload());
+        break;
+
+      case 'USER_ACK':
+        handlers.onUserJoined?.(data.payload);
+        break;
+
+      case 'USER_LEFT':
+        handlers.onUserLeft?.(data.payload);
+        break;
+
+      case 'CHAT_MESSAGE':
+        handlers.onMessage?.(data.payload);
+        break;
+
+      case 'FILE_EVENT':
+        handlers.onFileEvent?.(data.payload);
+        break;
+
+      default:
+        break;
+    }
+  };
+
+  sendEvent('USER_JOINED', createUserPayload());
+
+  return {
+    sendMessage(message) {
+      sendEvent('CHAT_MESSAGE', message);
+    },
+
+    sendFileEvent(payload) {
+      sendEvent('FILE_EVENT', payload);
+    },
+
+    disconnect() {
+      sendEvent('USER_LEFT', createUserPayload());
+      channel.close();
+    },
+  };
 }

@@ -40,7 +40,7 @@ const chatSlice = createSlice({
             });
         },
 
-        clearMessager(state) {
+        clearMessages(state) {
             state.messages = [];
             state.inputValue = '';
             state.sendStatus = 'idle';
@@ -62,9 +62,9 @@ export const {
     setInputValue,
     addMessage,
     addSystemMessage,
-    clearMessager,
+    clearMessages,
     setSendStatus,
     setError,
-}
+} = chatSlice.actions;
 
 export default chatSlice.reducer;
