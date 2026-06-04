@@ -1,12 +1,11 @@
 /* Общий контейнер экрана */
 .files-screen {
-  padding: 30px;
-  color: #ffffff; /* Белый текст */
-  background-color: #121212; /* Темный фон страницы */
-  min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   box-sizing: border-box;
+  margin-bottom: 20px;
 }
+
 
 .files-screen h2 {
   margin-top: 0;
