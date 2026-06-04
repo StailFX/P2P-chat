@@ -5,6 +5,7 @@ import styled from '@emotion/styled';
 import { Button } from '../../components/Button';
 import { setDragging, addOutgoingFile, updateFileProgress, updateFileStatus } from '../../features/filesSlice';
 import './Files.css'; 
+import { sendFileInChunks } from '../../utils/fileTransfer';
 
 const Wrapper = styled.div({
   position: 'relative', zIndex: 1, minHeight: '100%', display: 'flex',
@@ -29,7 +30,6 @@ const RoomId = styled.span(({ theme }) => ({
   fontFamily: theme.fonts.mono, color: theme.colors.cyan, fontWeight: 600,
 }));
 
-// --- НАША ЛОГИКА ---
 export function Files() {
   const navigate = useNavigate();
   const { roomId } = useParams();
@@ -37,18 +37,6 @@ export function Files() {
   const dispatch = useDispatch();
   const isDragging = useSelector((state) => state.files.isDragging);
   const filesList = useSelector((state) => state.files.list);
-
-  const simulateUpload = (fileId) => {
-    let currentProgress = 0;
-    const interval = setInterval(() => {
-      currentProgress += 10;
-      dispatch(updateFileProgress({ id: fileId, progress: currentProgress }));
-      if (currentProgress >= 100) {
-        clearInterval(interval);
-        dispatch(updateFileStatus({ id: fileId, status: 'completed' }));
-      }
-    }, 500);
-  };
 
   const handleDragOver = useCallback((e) => {
     e.preventDefault();
@@ -60,16 +48,34 @@ export function Files() {
     dispatch(setDragging(false));
   }, [dispatch]);
 
-  const handleDrop = useCallback((e) => {
+  const handleDrop = useCallback(async (e) => {
     e.preventDefault();
     dispatch(setDragging(false));
 
     const files = Array.from(e.dataTransfer.files);
-    files.forEach((file) => {
+    
+    for (const file of files) {
       const fileId = Date.now() + '-' + file.name;
+      
+      // 1. Добавляем в Redux
       dispatch(addOutgoingFile({ id: fileId, name: file.name, size: file.size, type: file.type }));
-      simulateUpload(fileId);
-    });
+
+      // 2. Начинаем реальную нарезку файла
+      await sendFileInChunks(
+        file, 
+        fileId, 
+        (chunkMessage) => {
+          console.log("Готов кусок к отправке:", chunkMessage.type);
+          // TODO Сева: connectionDataChannel.send(JSON.stringify(chunkMessage));
+        },
+        (progress) => {
+          dispatch(updateFileProgress({ id: fileId, progress }));
+          if (progress === 100) {
+             dispatch(updateFileStatus({ id: fileId, status: 'completed' }));
+          }
+        }
+      );
+    }
   }, [dispatch]);
 
   return (
@@ -77,7 +83,6 @@ export function Files() {
       <Card>
         <Heading>Файлы комнаты: <RoomId>{roomId}</RoomId></Heading>
         
-        {/* НАША ЗОНА DRAG AND DROP */}
         <div className="files-screen">
           <div 
             className={`drop-zone ${isDragging ? 'active' : ''}`}
