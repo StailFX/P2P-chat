@@ -1,15 +1,19 @@
 import styled from '@emotion/styled';
 import { Button } from '../../../components/Button';
 
-const Form = styled.form({
+const Form = styled.form(({ theme }) => ({
   flex: '0 0 auto',
   display: 'flex',
   gap: 10,
   alignItems: 'flex-start',
-});
+  [`@media (max-width: ${theme.breakpoints.mobile})`]: {
+    gap: 8,
+  },
+}));
 
 const InputWrap = styled.div({
   flex: 1,
+  minWidth: 0,
 });
 
 const Label = styled.label({
@@ -46,6 +50,15 @@ const Input = styled.input(({ theme }) => ({
   '&:disabled': {
     cursor: 'not-allowed',
     opacity: 0.6,
+  },
+}));
+
+const SendButton = styled(Button)(({ theme }) => ({
+  flexShrink: 0,
+  [`@media (max-width: ${theme.breakpoints.mobile})`]: {
+    padding: '11px 14px',
+    fontSize: 13,
+    minHeight: 'unset',
   },
 }));
 
@@ -86,7 +99,7 @@ export function ChatMessageInput({
           id="message-input"
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          placeholder="Введите сообщение..."
+          placeholder="Сообщение..."
           maxLength={2000}
           disabled={disabled}
         />
@@ -94,15 +107,13 @@ export function ChatMessageInput({
         {error && <ErrorText role="alert">{error}</ErrorText>}
 
         {disabled && (
-          <DisabledHint>
-            Сообщения можно отправлять после подключения второго участника
-          </DisabledHint>
+          <DisabledHint>Ждём второго участника</DisabledHint>
         )}
       </InputWrap>
 
-      <Button type="submit" disabled={isSendDisabled}>
+      <SendButton type="submit" disabled={isSendDisabled}>
         Отправить
-      </Button>
+      </SendButton>
     </Form>
   );
 }

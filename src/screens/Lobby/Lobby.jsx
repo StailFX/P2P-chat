@@ -444,7 +444,7 @@ export function Lobby() {
                 setRoomIdInput(v);
                 if (roomIdError) setRoomIdError(null);
               }}
-              placeholder="например, k7m2pz"
+              placeholder="ID комнаты"
               maxLength={12}
               error={roomIdError}
             />

@@ -18,7 +18,7 @@ describe('ChatMessageInput', () => {
       />,
     );
 
-    expect(screen.getByPlaceholderText('Введите сообщение...')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Сообщение...')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /отправить/i })).toBeInTheDocument();
   });
 
@@ -38,7 +38,7 @@ describe('ChatMessageInput', () => {
       />,
     );
 
-    await user.type(screen.getByPlaceholderText('Введите сообщение...'), 'Привет');
+    await user.type(screen.getByPlaceholderText('Сообщение...'), 'Привет');
 
     expect(onChange).toHaveBeenCalled();
   });
@@ -93,9 +93,9 @@ describe('ChatMessageInput', () => {
       />,
     );
 
-    expect(screen.getByPlaceholderText('Введите сообщение...')).toBeDisabled();
+    expect(screen.getByPlaceholderText('Сообщение...')).toBeDisabled();
     expect(
-      screen.getByText(/сообщения можно отправлять после подключения/i),
+      screen.getByText(/ждём второго участника/i),
     ).toBeInTheDocument();
   });
 });

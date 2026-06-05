@@ -1,15 +1,20 @@
 import styled from '@emotion/styled';
 import { NICKNAME_COLORS } from '../constants/colors';
 
-const Group = styled.div({
-  display: 'flex',
-  flexWrap: 'wrap',
-  gap: 10,
-});
+const Group = styled.div(({ theme }) => ({
+  display: 'grid',
+  gridTemplateColumns: 'repeat(8, minmax(0, 1fr))',
+  gap: 8,
+  justifyItems: 'center',
+  [`@media (max-width: ${theme.breakpoints.mobile})`]: {
+    gap: 6,
+  },
+}));
 
 const Dot = styled.button(({ theme, active, color }) => ({
   width: 28,
   height: 28,
+  maxWidth: '100%',
   borderRadius: '50%',
   border: `2px solid ${active ? '#fff' : 'transparent'}`,
   background: `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.5), transparent 50%), ${color}`,

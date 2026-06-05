@@ -1,19 +1,24 @@
 import styled from '@emotion/styled';
 import { Button } from '../../../components/Button';
 
-const Header = styled.header({
+const Header = styled.header(({ theme }) => ({
   flex: '0 0 auto',
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'flex-start',
   gap: 16,
   flexWrap: 'wrap',
-});
+  [`@media (max-width: ${theme.breakpoints.mobile})`]: {
+    gap: 12,
+  },
+}));
 
 const HeaderInfo = styled.div({
   display: 'flex',
   flexDirection: 'column',
   gap: 6,
+  minWidth: 0,
+  flex: '1 1 auto',
 });
 
 const Heading = styled.h1({
@@ -33,6 +38,9 @@ const Hint = styled.p(({ theme }) => ({
   margin: 0,
   color: theme.colors.textMuted,
   fontSize: 13,
+  [`@media (max-width: ${theme.breakpoints.mobile})`]: {
+    display: 'none',
+  },
 }));
 
 const Status = styled.span(({ theme, status }) => ({
@@ -53,11 +61,17 @@ const Status = styled.span(({ theme, status }) => ({
       : `1px solid ${theme.colors.glassBorder}`,
 }));
 
-const HeaderActions = styled.div({
+const HeaderActions = styled.div(({ theme }) => ({
   display: 'flex',
   gap: 8,
   flexWrap: 'wrap',
-});
+  [`@media (max-width: ${theme.breakpoints.mobile})`]: {
+    width: '100%',
+    '& > button': {
+      flex: 1,
+    },
+  },
+}));
 
 function getStatusText(status) {
   const statuses = {
@@ -94,11 +108,11 @@ export function ChatHeader({
       </HeaderInfo>
 
       <HeaderActions>
-        <Button variant="secondary" onClick={onCopyLink}>
+        <Button variant="secondary" size="sm" onClick={onCopyLink}>
           Скопировать
         </Button>
 
-        <Button variant="secondary" onClick={onLeaveRoom}>
+        <Button variant="secondary" size="sm" onClick={onLeaveRoom}>
           Выйти
         </Button>
       </HeaderActions>
