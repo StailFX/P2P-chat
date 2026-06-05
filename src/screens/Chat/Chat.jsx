@@ -334,7 +334,7 @@ export function Chat() {
   const storedProfile = useSelector((state) => state.profile);
 
   const profile = {
-    nickname: storedProfile?.nickname || 'Севчик',
+    nickname: storedProfile?.nickname || 'User',
     avatar: getAvatarById(storedProfile?.avatarId),
     nicknameColor: storedProfile?.nicknameColor || '#60a5fa',
   };
