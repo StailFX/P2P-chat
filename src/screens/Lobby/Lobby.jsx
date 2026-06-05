@@ -397,7 +397,7 @@ export function Lobby() {
             label="Ник"
             value={profile.nickname}
             onChange={(v) => dispatch(setNickname(v))}
-            placeholder="Например, Никита"
+            placeholder="Твой ник"
             maxLength={20}
             error={profile.nickname ? profile.error : null}
           />
