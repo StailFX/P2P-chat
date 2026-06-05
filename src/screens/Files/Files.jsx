@@ -272,8 +272,9 @@ export function Files() {
       peerId,
       profile: { name: 'User' },
       handlers: {
-        onFileEvent: (data) => {
-          const message = data.payload;
+        // mockConnectionService отдаёт уже распакованный payload (само chunk-сообщение)
+        onFileEvent: (message) => {
+          if (!message) return;
 
           if (message.type === 'file-start') {
             dispatch(
