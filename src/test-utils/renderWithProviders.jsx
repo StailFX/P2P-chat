@@ -3,8 +3,12 @@ import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { ThemeProvider } from '@emotion/react';
 import { MemoryRouter } from 'react-router-dom';
+
 import profileReducer from '../features/profile/profileSlice';
 import roomReducer from '../features/room/roomSlice';
+import chatReducer from '../features/chat/chatSlice';
+import connectionReducer from '../features/connection/connectionSlice';
+
 import { theme } from '../styles/theme';
 
 export const makeStore = (preloadedState) =>
@@ -12,6 +16,8 @@ export const makeStore = (preloadedState) =>
     reducer: {
       profile: profileReducer,
       room: roomReducer,
+      chat: chatReducer,
+      connection: connectionReducer,
     },
     preloadedState,
   });
@@ -34,5 +40,6 @@ export const renderWithProviders = (
       </ThemeProvider>
     </Provider>,
   );
+
   return { store, ...utils };
 };

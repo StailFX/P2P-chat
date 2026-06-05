@@ -1,4 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { createId }  from '../../utils/createId';
 
 export const MAX_MESSAGE_LENGTH = 2000;
 
@@ -28,7 +29,7 @@ const chatSlice = createSlice({
             const { roomId, text } = action.payload;
 
             state.messages.push({
-                id: crypto.randomUUID(),
+                id: createId('system'),
                 roomId,
                 senderId: 'system',
                 senderName: 'System',
