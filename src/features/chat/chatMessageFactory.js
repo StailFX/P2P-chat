@@ -1,3 +1,5 @@
+import { createId } from '../../utils/createId';
+
 export function createChatMessage({
   roomId,
   senderId,
@@ -5,7 +7,7 @@ export function createChatMessage({
   text,
 }) {
   return {
-    id: crypto.randomUUID(),
+    id: createId('message'),
     roomId,
     senderId,
     senderNickname: profile.nickname,

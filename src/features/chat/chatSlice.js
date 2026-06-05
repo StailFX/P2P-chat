@@ -1,4 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { createId }  from '../../utils/createId';
 
 export const MAX_MESSAGE_LENGTH = 2000;
 
@@ -28,7 +29,7 @@ const chatSlice = createSlice({
             const { roomId, text } = action.payload;
 
             state.messages.push({
-                id: crypto.randomUUID(),
+                id: createId('system'),
                 roomId,
                 senderId: 'system',
                 senderName: 'System',
@@ -40,7 +41,7 @@ const chatSlice = createSlice({
             });
         },
 
-        clearMessager(state) {
+        clearMessages(state) {
             state.messages = [];
             state.inputValue = '';
             state.sendStatus = 'idle';
@@ -62,9 +63,9 @@ export const {
     setInputValue,
     addMessage,
     addSystemMessage,
-    clearMessager,
+    clearMessages,
     setSendStatus,
     setError,
-}
+} = chatSlice.actions;
 
 export default chatSlice.reducer;

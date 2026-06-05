@@ -1,7 +1,16 @@
 import { createSlice } from '@reduxjs/toolkit';
 
+
+function createPeerId() {
+  if (globalThis.crypto?.randomUUID) {
+    return globalThis.crypto.randomUUID();
+  }
+
+  return `peer-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 const initialState = {
-    peerId: crypto.randomUUID(),
+    peerId: createPeerId(),
     remotePeerId: null,
     status: 'idle', 
     messageChannelReady: false,
