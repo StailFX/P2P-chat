@@ -104,16 +104,48 @@ const FileItem = styled.li(({ theme }) => ({
   background: theme.colors.glassBg,
   border: `1px solid ${theme.colors.glassBorder}`,
   borderRadius: theme.radii.md,
-  padding: '14px 16px',
+  padding: '12px 14px',
   boxShadow: `inset 0 1px 0 ${theme.colors.glassHighlight}`,
+  display: 'flex',
+  gap: 12,
+  alignItems: 'center',
 }));
+
+const Thumb = styled.div(({ theme }) => ({
+  flexShrink: 0,
+  width: 48,
+  height: 48,
+  borderRadius: theme.radii.sm,
+  background: theme.colors.bg3,
+  border: `1px solid ${theme.colors.glassBorder}`,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  overflow: 'hidden',
+  fontSize: 22,
+  lineHeight: 1,
+}));
+
+const ThumbImg = styled.img({
+  width: '100%',
+  height: '100%',
+  objectFit: 'cover',
+  display: 'block',
+});
+
+const FileBody = styled.div({
+  minWidth: 0,
+  flex: 1,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 6,
+});
 
 const FileInfo = styled.div(({ theme }) => ({
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  gap: 12,
-  marginBottom: 10,
+  gap: 10,
   fontSize: 14,
   color: theme.colors.text,
 }));
@@ -126,7 +158,7 @@ const FileName = styled.span({
   flex: 1,
 });
 
-const FileSize = styled.span(({ theme }) => ({
+const FileMeta = styled.span(({ theme }) => ({
   color: theme.colors.textFaint,
   fontSize: 12,
   fontFamily: theme.fonts.mono,
@@ -187,6 +219,28 @@ const formatSize = (bytes) => {
   return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
 };
 
+const isImageType = (type) => typeof type === 'string' && type.startsWith('image/');
+
+const iconForType = (type = '', name = '') => {
+  if (type.startsWith('video/')) return '🎬';
+  if (type.startsWith('audio/')) return '🎵';
+  if (type === 'application/pdf') return '📕';
+  if (type.startsWith('text/') || /\.(txt|md|log)$/i.test(name)) return '📄';
+  if (
+    /(zip|rar|7z|tar|gz|bz2)/i.test(type) ||
+    /\.(zip|rar|7z|tar|gz|bz2)$/i.test(name)
+  ) {
+    return '🗜️';
+  }
+  if (
+    /word|excel|powerpoint|sheet|presentation|document/i.test(type) ||
+    /\.(docx?|xlsx?|pptx?)$/i.test(name)
+  ) {
+    return '📊';
+  }
+  return '📁';
+};
+
 const statusLabel = (file) => {
   if (file.status === 'completed') return '✅';
   if (file.status === 'error') return '⚠';
@@ -208,6 +262,8 @@ export function Files() {
 
   const connectionRef = useRef(null);
   const fileInputRef = useRef(null);
+  // Локальный реестр blob-URLов превью, чтобы при размонтировании их освободить.
+  const previewUrlsRef = useRef([]);
   const fileInputId = 'files-screen-input';
 
   useEffect(() => {
@@ -251,6 +307,15 @@ export function Files() {
 
     return () => {
       if (connectionRef.current) connectionRef.current.disconnect();
+      // освобождаем blob-URL'ы превью, иначе File будет жить в памяти
+      for (const url of previewUrlsRef.current) {
+        try {
+          URL.revokeObjectURL(url);
+        } catch {
+          /* no-op */
+        }
+      }
+      previewUrlsRef.current = [];
     };
   }, [roomId, peerId, dispatch]);
 
@@ -274,12 +339,18 @@ export function Files() {
     async (files) => {
       for (const file of files) {
         const fileId = crypto.randomUUID();
+        const previewUrl = isImageType(file.type)
+          ? URL.createObjectURL(file)
+          : null;
+        if (previewUrl) previewUrlsRef.current.push(previewUrl);
+
         dispatch(
           addOutgoingFile({
             id: fileId,
             name: file.name,
             size: file.size,
             type: file.type,
+            previewUrl,
           }),
         );
 
@@ -323,6 +394,21 @@ export function Files() {
 
   const sortedFiles = useMemo(() => filesList, [filesList]);
 
+  const renderThumb = (file) => {
+    // Для отправителя сразу есть previewUrl, для получателя — после file-end blobUrl
+    const imgSrc = file.previewUrl || (isImageType(file.type) ? file.blobUrl : null);
+    if (imgSrc) {
+      return (
+        <Thumb>
+          <ThumbImg src={imgSrc} alt="" />
+        </Thumb>
+      );
+    }
+    return (
+      <Thumb aria-hidden="true">{iconForType(file.type, file.name)}</Thumb>
+    );
+  };
+
   return (
     <Wrapper>
       <Card>
@@ -349,10 +435,14 @@ export function Files() {
           <DropHint>
             {isDragging ? 'Бросай сюда' : 'Перетащи файлы или нажми, чтобы выбрать'}
           </DropHint>
-          <Button variant="secondary" size="md" onClick={(e) => {
-            e.stopPropagation();
-            fileInputRef.current?.click();
-          }}>
+          <Button
+            variant="secondary"
+            size="md"
+            onClick={(e) => {
+              e.stopPropagation();
+              fileInputRef.current?.click();
+            }}
+          >
             Выбрать файлы
           </Button>
           <HiddenInput
@@ -372,28 +462,34 @@ export function Files() {
               const done = file.status === 'completed';
               return (
                 <FileItem key={file.id}>
-                  <FileInfo>
-                    <FileName title={file.name}>{file.name}</FileName>
-                    <FileSize>{formatSize(file.size)}</FileSize>
-                    {done && file.direction === 'incoming' && file.blobUrl ? (
-                      <DownloadLink href={file.blobUrl} download={file.name}>
-                        Скачать
-                      </DownloadLink>
-                    ) : (
-                      <StatusBadge status={file.status} aria-label={`Статус ${file.status}`}>
-                        {statusLabel(file)}
-                      </StatusBadge>
-                    )}
-                  </FileInfo>
-                  <ProgressTrack
-                    role="progressbar"
-                    aria-valuenow={progress}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-label={`Прогресс ${file.name}`}
-                  >
-                    <ProgressFill value={progress} done={done} />
-                  </ProgressTrack>
+                  {renderThumb(file)}
+                  <FileBody>
+                    <FileInfo>
+                      <FileName title={file.name}>{file.name}</FileName>
+                      <FileMeta>{formatSize(file.size)}</FileMeta>
+                      {done && file.direction === 'incoming' && file.blobUrl ? (
+                        <DownloadLink href={file.blobUrl} download={file.name}>
+                          Скачать
+                        </DownloadLink>
+                      ) : (
+                        <StatusBadge
+                          status={file.status}
+                          aria-label={`Статус ${file.status}`}
+                        >
+                          {statusLabel(file)}
+                        </StatusBadge>
+                      )}
+                    </FileInfo>
+                    <ProgressTrack
+                      role="progressbar"
+                      aria-valuenow={progress}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-label={`Прогресс ${file.name}`}
+                    >
+                      <ProgressFill value={progress} done={done} />
+                    </ProgressTrack>
+                  </FileBody>
                 </FileItem>
               );
             })}
