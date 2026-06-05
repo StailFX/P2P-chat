@@ -4,9 +4,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import styled from '@emotion/styled';
 import { AVATARS } from '../../constants/avatars';
 
-import { ChatHeader } from '../../components/ChatHeader';
-import { ChatMessageList } from '../../components/ChatMessageList';
-import { ChatMessageInput } from '../../components/ChatMessageInput';
+import { ChatHeader } from '../../features/chat/components/ChatHeader';
+import { ChatMessageList } from '../../features/chat/components/ChatMessageList';
+import { ChatMessageInput } from '../../features/chat/components/ChatMessageInput';
 
 import {
   addMessage,

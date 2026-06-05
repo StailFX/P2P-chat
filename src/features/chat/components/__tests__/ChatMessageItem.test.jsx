@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react';
 
-import { renderWithProviders } from '../../test-utils/renderWithProviders';
+import { renderWithProviders } from '../../../../test-utils/renderWithProviders';
 import { ChatMessageItem } from '../ChatMessageItem';
 
 describe('ChatMessageItem', () => {

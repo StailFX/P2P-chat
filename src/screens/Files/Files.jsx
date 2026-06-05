@@ -9,7 +9,7 @@ import {
   addIncomingFile,
   updateFileProgress,
   updateFileStatus,
-} from '../../features/filesSlice';
+} from '../../features/files/filesSlice';
 import { sendFileInChunks, receiverInstance } from '../../utils/fileTransfer';
 import { createMockConnection } from '../../features/connection/mockConnectionService';
 

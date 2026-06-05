@@ -8,7 +8,7 @@ import profileReducer from '../features/profile/profileSlice';
 import roomReducer from '../features/room/roomSlice';
 import chatReducer from '../features/chat/chatSlice';
 import connectionReducer from '../features/connection/connectionSlice';
-import filesReducer from '../features/filesSlice';
+import filesReducer from '../features/files/filesSlice';
 
 import { theme } from '../styles/theme';
 

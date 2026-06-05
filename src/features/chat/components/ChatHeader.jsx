@@ -1,5 +1,5 @@
 import styled from '@emotion/styled';
-import { Button } from './Button';
+import { Button } from '../../../components/Button';
 
 const Header = styled.header({
   flex: '0 0 auto',
