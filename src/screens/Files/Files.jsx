@@ -1,183 +1,410 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from '@emotion/styled';
 import { Button } from '../../components/Button';
-import { setDragging, addOutgoingFile, addIncomingFile, updateFileProgress, updateFileStatus } from '../../features/filesSlice';
-import './Files.css'; 
+import {
+  setDragging,
+  addOutgoingFile,
+  addIncomingFile,
+  updateFileProgress,
+  updateFileStatus,
+} from '../../features/filesSlice';
 import { sendFileInChunks, receiverInstance } from '../../utils/fileTransfer';
 import { createMockConnection } from '../../features/connection/mockConnectionService';
 
 const Wrapper = styled.div({
-  position: 'relative', zIndex: 1, minHeight: '100%', display: 'flex',
-  alignItems: 'center', justifyContent: 'center', padding: 24,
+  position: 'relative',
+  zIndex: 1,
+  minHeight: '100%',
+  display: 'flex',
+  alignItems: 'flex-start',
+  justifyContent: 'center',
+  padding: 24,
 });
 
 const Card = styled.section(({ theme }) => ({
-  position: 'relative', 
-  maxWidth: 600, 
-  width: '100%', background: theme.colors.glassBg,
-  backdropFilter: theme.blurs.glass, WebkitBackdropFilter: theme.blurs.glass,
-  border: `1px solid ${theme.colors.glassBorder}`, borderRadius: theme.radii.xl,
-  padding: 32, textAlign: 'center',
-  boxShadow: `inset 0 1px 0 ${theme.colors.glassHighlight}, 0 24px 64px rgba(0,0,0,0.5)`,
+  position: 'relative',
+  maxWidth: 640,
+  width: '100%',
+  background: theme.colors.glassBg,
+  backdropFilter: theme.blurs.glass,
+  WebkitBackdropFilter: theme.blurs.glass,
+  border: `1px solid ${theme.colors.glassBorder}`,
+  borderRadius: theme.radii.xl,
+  padding: 32,
+  boxShadow: `
+    inset 0 1px 0 ${theme.colors.glassHighlight},
+    0 24px 64px rgba(0, 0, 0, 0.5)
+  `,
 }));
 
 const Heading = styled.h1(({ theme }) => ({
-  fontSize: 22, margin: '0 0 24px', fontWeight: 700, letterSpacing: '-0.01em', color: '#fff'
+  fontSize: 22,
+  margin: '0 0 24px',
+  fontWeight: 700,
+  letterSpacing: '-0.01em',
+  textAlign: 'center',
+  color: theme.colors.text,
 }));
 
 const RoomId = styled.span(({ theme }) => ({
-  fontFamily: theme.fonts.mono, color: theme.colors.cyan, fontWeight: 600,
+  fontFamily: theme.fonts.mono,
+  color: theme.colors.cyan,
+  fontWeight: 600,
 }));
+
+const DropZone = styled.div(({ theme, active }) => ({
+  border: `2px dashed ${active ? theme.colors.cyan : theme.colors.borderStrong}`,
+  borderRadius: theme.radii.lg,
+  padding: '48px 24px',
+  textAlign: 'center',
+  background: active ? theme.colors.cyanSoft : theme.colors.glassBg,
+  backdropFilter: theme.blurs.glassLight,
+  WebkitBackdropFilter: theme.blurs.glassLight,
+  transition: 'all 0.2s ease',
+  marginBottom: 24,
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 14,
+  boxShadow: active
+    ? `inset 0 1px 0 ${theme.colors.glassHighlight}, 0 0 24px ${theme.colors.cyanSoft}`
+    : `inset 0 1px 0 ${theme.colors.glassHighlight}`,
+}));
+
+const DropHint = styled.p(({ theme }) => ({
+  margin: 0,
+  color: theme.colors.textMuted,
+  fontSize: 14,
+}));
+
+const HiddenInput = styled.input({
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  padding: 0,
+  margin: -1,
+  overflow: 'hidden',
+  clip: 'rect(0,0,0,0)',
+  border: 0,
+});
+
+const FileList = styled.ul({
+  listStyle: 'none',
+  margin: 0,
+  padding: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 10,
+});
+
+const FileItem = styled.li(({ theme }) => ({
+  background: theme.colors.glassBg,
+  border: `1px solid ${theme.colors.glassBorder}`,
+  borderRadius: theme.radii.md,
+  padding: '14px 16px',
+  boxShadow: `inset 0 1px 0 ${theme.colors.glassHighlight}`,
+}));
+
+const FileInfo = styled.div(({ theme }) => ({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  gap: 12,
+  marginBottom: 10,
+  fontSize: 14,
+  color: theme.colors.text,
+}));
+
+const FileName = styled.span({
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+  minWidth: 0,
+  flex: 1,
+});
+
+const FileSize = styled.span(({ theme }) => ({
+  color: theme.colors.textFaint,
+  fontSize: 12,
+  fontFamily: theme.fonts.mono,
+  flexShrink: 0,
+}));
+
+const DownloadLink = styled.a(({ theme }) => ({
+  color: theme.colors.cyan,
+  fontWeight: 600,
+  textDecoration: 'none',
+  fontSize: 13,
+  flexShrink: 0,
+  '&:hover': { textDecoration: 'underline' },
+}));
+
+const StatusBadge = styled.span(({ theme, status }) => {
+  const tone =
+    status === 'completed'
+      ? theme.colors.emerald
+      : status === 'error'
+        ? theme.colors.danger
+        : theme.colors.textMuted;
+  return {
+    fontSize: 12,
+    color: tone,
+    flexShrink: 0,
+  };
+});
+
+const ProgressTrack = styled.div(({ theme }) => ({
+  width: '100%',
+  height: 6,
+  background: theme.colors.bg3,
+  borderRadius: 3,
+  overflow: 'hidden',
+}));
+
+const ProgressFill = styled.div(({ theme, value, done }) => ({
+  height: '100%',
+  width: `${value}%`,
+  background: done
+    ? `linear-gradient(90deg, ${theme.colors.emerald}, ${theme.colors.cyan})`
+    : `linear-gradient(90deg, ${theme.colors.cyan}, ${theme.colors.accent})`,
+  borderRadius: 3,
+  transition: 'width 0.2s ease',
+  boxShadow: `0 0 12px ${done ? theme.colors.emeraldSoft : theme.colors.cyanSoft}`,
+}));
+
+const Footer = styled.div({
+  marginTop: 24,
+  display: 'flex',
+  justifyContent: 'center',
+});
+
+const formatSize = (bytes) => {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+};
+
+const statusLabel = (file) => {
+  if (file.status === 'completed') return '✅';
+  if (file.status === 'error') return '⚠';
+  if (file.direction === 'incoming') return '⬇';
+  return '⬆';
+};
 
 export function Files() {
   const navigate = useNavigate();
   const { roomId } = useParams();
   const dispatch = useDispatch();
-  
+
   const isDragging = useSelector((state) => state.files.isDragging);
   const filesList = useSelector((state) => state.files.list);
-  const peerId = useSelector((state) => state.connection?.peerId || crypto.randomUUID());
 
-  // Ссылка на соединение Севы
+  // peerId фиксируется один раз на маунт, иначе ре-рендер каждый раз даёт новый
+  // — приёмник вкладки не отличит свои события от чужих.
+  const [peerId] = useState(() => crypto.randomUUID());
+
   const connectionRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const fileInputId = 'files-screen-input';
 
-  // === ИНИЦИАЛИЗАЦИЯ СВЯЗИ ===
   useEffect(() => {
-    // Создаем канал связи
     connectionRef.current = createMockConnection({
-      roomId: roomId,
-      peerId: peerId,
+      roomId,
+      peerId,
       profile: { name: 'User' },
       handlers: {
-        // Ловим файлы от других пользователей
         onFileEvent: (data) => {
           const message = data.payload;
 
           if (message.type === 'file-start') {
-            dispatch(addIncomingFile({
-              id: message.fileId,
-              name: message.name,
-              size: message.size,
-              type: message.fileType
-            }));
+            dispatch(
+              addIncomingFile({
+                id: message.fileId,
+                name: message.name,
+                size: message.size,
+                type: message.fileType,
+              }),
+            );
           }
 
-          // Отдаем куски твоему классу-сборщику
           receiverInstance.handleIncomingData(
             message,
-            // Обновляем прогресс
             (fileId, progress) => {
               dispatch(updateFileProgress({ id: fileId, progress }));
             },
-            // Файл собран -> показываем кнопку скачать
             (fileId, downloadUrl) => {
-              dispatch(updateFileStatus({ id: fileId, status: 'completed', blobUrl: downloadUrl }));
-            }
+              dispatch(
+                updateFileStatus({
+                  id: fileId,
+                  status: 'completed',
+                  blobUrl: downloadUrl,
+                }),
+              );
+            },
           );
-        }
-      }
+        },
+      },
     });
 
     return () => {
-      // Отключаемся при выходе со страницы
-      if (connectionRef.current) {
-        connectionRef.current.disconnect();
-      }
+      if (connectionRef.current) connectionRef.current.disconnect();
     };
   }, [roomId, peerId, dispatch]);
 
-  const handleDragOver = useCallback((e) => {
-    e.preventDefault();
-    if (!isDragging) dispatch(setDragging(true));
-  }, [dispatch, isDragging]);
+  const handleDragOver = useCallback(
+    (e) => {
+      e.preventDefault();
+      if (!isDragging) dispatch(setDragging(true));
+    },
+    [dispatch, isDragging],
+  );
 
-  const handleDragLeave = useCallback((e) => {
-    e.preventDefault();
-    dispatch(setDragging(false));
-  }, [dispatch]);
+  const handleDragLeave = useCallback(
+    (e) => {
+      e.preventDefault();
+      dispatch(setDragging(false));
+    },
+    [dispatch],
+  );
 
-  // === ОТПРАВКА ФАЙЛА ===
-  const handleDrop = useCallback(async (e) => {
-    e.preventDefault();
-    dispatch(setDragging(false));
+  const handleFiles = useCallback(
+    async (files) => {
+      for (const file of files) {
+        const fileId = crypto.randomUUID();
+        dispatch(
+          addOutgoingFile({
+            id: fileId,
+            name: file.name,
+            size: file.size,
+            type: file.type,
+          }),
+        );
 
-    const files = Array.from(e.dataTransfer.files);
-    
-    for (const file of files) {
-      const fileId = Date.now() + '-' + file.name;
-      
-      dispatch(addOutgoingFile({ id: fileId, name: file.name, size: file.size, type: file.type }));
+        await sendFileInChunks(
+          file,
+          fileId,
+          (chunkMessage) => {
+            connectionRef.current?.sendFileEvent(chunkMessage);
+          },
+          (progress) => {
+            dispatch(updateFileProgress({ id: fileId, progress }));
+            if (progress === 100) {
+              dispatch(updateFileStatus({ id: fileId, status: 'completed' }));
+            }
+          },
+        );
+      }
+    },
+    [dispatch],
+  );
 
-      await sendFileInChunks(
-        file, 
-        fileId, 
-        (chunkMessage) => {
-          // Отправляем кусок через сервис Севы!
-          if (connectionRef.current) {
-            connectionRef.current.sendFileEvent(chunkMessage);
-          }
-        },
-        (progress) => {
-          dispatch(updateFileProgress({ id: fileId, progress }));
-          if (progress === 100) {
-             dispatch(updateFileStatus({ id: fileId, status: 'completed' }));
-          }
-        }
-      );
-    }
-  }, [dispatch]);
+  const handleDrop = useCallback(
+    (e) => {
+      e.preventDefault();
+      dispatch(setDragging(false));
+      const files = Array.from(e.dataTransfer.files);
+      if (files.length) handleFiles(files);
+    },
+    [dispatch, handleFiles],
+  );
+
+  const handlePick = useCallback(
+    (e) => {
+      const files = Array.from(e.target.files || []);
+      if (files.length) handleFiles(files);
+      // Сбросим, чтобы повторный выбор того же файла триггерил onChange
+      e.target.value = '';
+    },
+    [handleFiles],
+  );
+
+  const sortedFiles = useMemo(() => filesList, [filesList]);
 
   return (
     <Wrapper>
       <Card>
-        <Heading>Файлы комнаты: <RoomId>{roomId}</RoomId></Heading>
-        
-        <div className="files-screen">
-          <div 
-            className={`drop-zone ${isDragging ? 'active' : ''}`}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-          >
-            <p>{isDragging ? "Бросай сюда!" : "Перетащи файлы или выбери кнопкой"}</p>
-            <input 
-                type="file" multiple id="file-input" style={{ display: 'none' }}
-                onChange={(e) => handleDrop({ ...e, dataTransfer: e.target, preventDefault: () => {} })}
-            />
-            <label htmlFor="file-input" className="upload-btn">Выбрать файлы</label>
-          </div>
+        <Heading>
+          Файлы — <RoomId>{roomId}</RoomId>
+        </Heading>
 
-          <div className="files-list">
-            {filesList.map((file) => (
-              <div key={file.id} className="file-item">
-                 <div className="file-info">
-                   <span>{file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
-                   
-                   {/* Если файл входящий и загрузился -> показываем кнопку "Скачать" */}
-                   {file.status === 'completed' && file.direction === 'incoming' && file.blobUrl ? (
-                      <a href={file.blobUrl} download={file.name} style={{ color: '#00ffff', textDecoration: 'none', fontWeight: 'bold' }}>
-                        💾 Скачать
-                      </a>
-                   ) : (
-                      <span>{file.status === 'completed' ? '✅' : '⏳'}</span>
-                   )}
-                 </div>
-                 <div className="progress-bar-container">
-                   {/* Если статус completed, принудительно рисуем 100%, иначе берем прогресс. Если прогресса нет - 0% */}
-                  <div className="progress-bar" style={{ width: `${file.status === 'completed' ? 100 : (file.progress || 0)}%` }}></div>
-                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <DropZone
+          active={isDragging}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          role="button"
+          tabIndex={0}
+          aria-label="Перетащи файлы или выбери на устройстве"
+          onClick={() => fileInputRef.current?.click()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
+        >
+          <DropHint>
+            {isDragging ? 'Бросай сюда' : 'Перетащи файлы или нажми, чтобы выбрать'}
+          </DropHint>
+          <Button variant="secondary" size="md" onClick={(e) => {
+            e.stopPropagation();
+            fileInputRef.current?.click();
+          }}>
+            Выбрать файлы
+          </Button>
+          <HiddenInput
+            ref={fileInputRef}
+            id={fileInputId}
+            type="file"
+            multiple
+            onChange={handlePick}
+            aria-label="Выбрать файлы для отправки"
+          />
+        </DropZone>
 
-        <div style={{ marginTop: '24px' }}>
-            <Button variant="secondary" onClick={() => navigate('/')}>
+        {sortedFiles.length > 0 ? (
+          <FileList aria-label="Список передач">
+            {sortedFiles.map((file) => {
+              const progress = file.status === 'completed' ? 100 : file.progress || 0;
+              const done = file.status === 'completed';
+              return (
+                <FileItem key={file.id}>
+                  <FileInfo>
+                    <FileName title={file.name}>{file.name}</FileName>
+                    <FileSize>{formatSize(file.size)}</FileSize>
+                    {done && file.direction === 'incoming' && file.blobUrl ? (
+                      <DownloadLink href={file.blobUrl} download={file.name}>
+                        Скачать
+                      </DownloadLink>
+                    ) : (
+                      <StatusBadge status={file.status} aria-label={`Статус ${file.status}`}>
+                        {statusLabel(file)}
+                      </StatusBadge>
+                    )}
+                  </FileInfo>
+                  <ProgressTrack
+                    role="progressbar"
+                    aria-valuenow={progress}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`Прогресс ${file.name}`}
+                  >
+                    <ProgressFill value={progress} done={done} />
+                  </ProgressTrack>
+                </FileItem>
+              );
+            })}
+          </FileList>
+        ) : null}
+
+        <Footer>
+          <Button variant="secondary" onClick={() => navigate('/')}>
             Выйти в лобби
-            </Button>
-        </div>
+          </Button>
+        </Footer>
       </Card>
     </Wrapper>
   );
