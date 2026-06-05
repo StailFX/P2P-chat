@@ -1,0 +1,47 @@
+import { render } from '@testing-library/react';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
+import { ThemeProvider } from '@emotion/react';
+import { MemoryRouter } from 'react-router-dom';
+
+import profileReducer from '../features/profile/profileSlice';
+import roomReducer from '../features/room/roomSlice';
+import chatReducer from '../features/chat/chatSlice';
+import connectionReducer from '../features/connection/connectionSlice';
+import filesReducer from '../features/files/filesSlice';
+
+import { theme } from '../styles/theme';
+
+export const makeStore = (preloadedState) =>
+  configureStore({
+    reducer: {
+      profile: profileReducer,
+      room: roomReducer,
+      chat: chatReducer,
+      connection: connectionReducer,
+      files: filesReducer,
+    },
+    preloadedState,
+  });
+
+export const renderWithProviders = (
+  ui,
+  {
+    preloadedState,
+    store = makeStore(preloadedState),
+    route = '/',
+    routerEntries,
+  } = {},
+) => {
+  const utils = render(
+    <Provider store={store}>
+      <ThemeProvider theme={theme}>
+        <MemoryRouter initialEntries={routerEntries || [route]}>
+          {ui}
+        </MemoryRouter>
+      </ThemeProvider>
+    </Provider>,
+  );
+
+  return { store, ...utils };
+};
